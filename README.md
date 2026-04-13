@@ -1,4 +1,4 @@
-# All-in-1
+# All-in-One
 
 All your financial management in one place
 
