@@ -188,6 +188,18 @@ Services/       → API clients, business logic
 
 ---
 
+## Current Implementation Plan
+
+**Reference:** `plan.md` - Contains the active implementation roadmap.
+
+Before starting any feature work, agents should:
+1. Read `plan.md` to understand current priorities
+2. Check if the feature is already planned or in progress
+3. Follow the phases/steps outlined in the plan
+4. Update `plan.md` when completing a step
+
+---
+
 ## Git Conventions
 
 - Branch naming: `feat/<feature>`, `fix/<issue>`, `chore/<task>`

@@ -1,6 +1,6 @@
     Updating crates.io index
 error: failed to select a version for `burn`.
-    ... required by package `all-in-1-backend v0.1.0 (/Users/yonatanbenchabbat/Developer/Personal/All-in-1/code/backend)`
+    ... required by package `all-in-1-backend v0.1.0 (/Users/yonatanbenchabbat/Developer/Personal/All-in-One/code/backend)`
 versions that meet the requirements `^0.4` are: 0.4.0
 
 package `all-in-1-backend` depends on `burn` with feature `tch-backend` but `burn` does not have that feature.
