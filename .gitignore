@@ -1,3 +1,7 @@
 # pixi environments
 .pixi/*
 !.pixi/config.toml
+
+# Agent infrastructure files
+AGENTS.md
+plan.md
