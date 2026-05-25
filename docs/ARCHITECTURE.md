@@ -50,7 +50,7 @@ This document outlines the architecture for an all-in-one financial management a
                                      │
                                      ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│           Database (SQLite/PostgreSQL)                                      │
+│           Database (PostgreSQL)                                             │
 │   ┌─────────┐ ┌─────────┐ ┌─────────┐                                     │
 │   │ Users   │ │Budgets  │ │Transactions│                                    │
 │   └─────────┘ └─────────┘ └─────────┘                                     │
@@ -85,6 +85,7 @@ All-in-1/
 │   │   │       └── auth.rs       # JWT/auth middleware
 │   │   ├── services/
 │   │   │   ├── mod.rs            # Services module
+│   │   │   ├── auth_service.rs   # Auth business logic
 │   │   │   ├── budget_service.rs # Budget business logic
 │   │   │   ├── transaction_service.rs # Transaction logic
 │   │   │   └── llm_client.rs     # External LLM client
@@ -151,18 +152,19 @@ All-in-1/
 | `ml/parser.rs` | CSV parsing for Israeli credit card formats (Cal4, Max, Isracard) and generic |
 | `ml/classifier.rs` | ML model inference for transaction categorization and merchant identification |
 | `ml/models.rs` | Transaction and Category data structures |
-| `api/routes/auth.rs` | Authentication endpoints for user registration, login, and token refresh |
+| `api/routes/auth.rs` | OAuth callback handlers for Google and Apple Sign-In, JWT token generation/refresh, user profile retrieval, logout |
 | `api/routes/budgets.rs` | CRUD operations for budget management including create, read, update, and delete |
 | `api/routes/transactions.rs` | Transaction listing, searching, and retrieval endpoints |
 | `api/routes/upload.rs` | CSV file upload handler that processes data through ML classification |
 | `api/middleware/auth.rs` | JWT token validation middleware that protects authenticated routes |
+| `services/auth_service.rs` | Authentication business logic for OAuth token exchange, user lookup and creation |
 | `services/budget_service.rs` | Business logic for budget operations including creation, updates, and spending calculations |
 | `services/transaction_service.rs` | Business logic for transaction CRUD operations and filtering |
 | `services/llm_client.rs` | HTTP client for calling external LLM APIs (OpenAI/Anthropic) for insights |
-| `models/user.rs` | User data model with authentication and profile fields |
+| `models/user.rs` | User data model with id, tz (Israeli ID), email, name, OAuth provider fields, and timestamps |
 | `models/budget.rs` | Budget data model with amount limits and category associations |
 | `models/transaction.rs` | Transaction data model with categorized spending information |
-| `db/connection.rs` | Database connection pool management for SQLite or PostgreSQL |
+| `db/connection.rs` | Database connection pool management for PostgreSQL |
 | `db/migrations/` | SQL migration files for creating and updating database schema |
 | `db/schema.rs` | Table definitions and schema structure for the database |
 | `config.rs` | Environment variable loading and application configuration management |
@@ -219,8 +221,8 @@ iOS → Rust API → Gather transaction data → Send to LLM → Return insights
 | Layer | Technology | Reason |
 |-------|------------|--------|
 | Backend (API + ML) | Rust | Unified codebase, performance, safety |
-| ML Framework | Burn | Pure Rust ML (train + inference) |
-| Database | SQLite (dev) / PostgreSQL (prod) | Reliable, user preference |
+| ML Framework | Burn | Rust training + inference via Burn (tch backend) |
+| Database | PostgreSQL | Reliable, proven in production |
 | iOS | Swift + SwiftUI | Native iOS, modern UI framework |
 | LLM | External API (OpenAI/Anthropic) | User preference |
 
@@ -230,8 +232,11 @@ iOS → Rust API → Gather transaction data → Send to LLM → Return insights
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/auth/register` | POST | User registration |
-| `/auth/login` | POST | User login |
+| `/auth/google` | POST | Google OAuth callback |
+| `/auth/apple` | POST | Apple OAuth callback |
+| `/auth/refresh` | POST | Refresh JWT token |
+| `/auth/me` | GET | Get current user profile |
+| `/auth/logout` | POST | Invalidate token |
 | `/budgets` | GET | List budgets |
 | `/budgets` | POST | Create budget |
 | `/budgets/{id}` | PUT | Update budget |

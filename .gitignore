@@ -5,3 +5,7 @@
 # Agent infrastructure files
 AGENTS.md
 plan.md
+
+# target and debug folders
+code/backend/debug/*
+code/backend/target/*
