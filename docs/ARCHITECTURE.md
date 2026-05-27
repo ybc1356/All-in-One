@@ -13,47 +13,46 @@ This document outlines the architecture for an all-in-one financial management a
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                           iOS Client (SwiftUI)                              │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐│
-│  │   Budgets   │  │ Transactions│  │  Insights   │  │   LLM Assistant    ││
-│  │    View     │  │    List     │  │   (Charts)  │  │   (OpenAI/Anthropic)││
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └──────────┬──────────┘│
-└─────────┼────────────────┼────────────────┼────────────────────┼───────────┘
-          │                │                │                    │
-          └────────────────┴────────────────┴────────────────────┘
-                                     │
-                                     ▼
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │   Budgets   │  │Transactions │  │  Insights   │  │    LLM Assistant    │ │
+│  │    View     │  │    List     │  │  (Charts)   │  │   (External API)    │ │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └──────────┬──────────┘ │
+└─────────┴────────────────┴────────────────┴────────────────────┴────────────┘
+                                     │                                  
+                                     ▼                                  
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                        Backend (Rust - API + ML)                           │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐  │
-│  │  Auth       │  │  Budget     │  │ Transaction │  │  CSV Upload     │  │
-│  │  Middleware │  │  Routes     │  │  Routes     │  │  Handler        │  │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └────────┬────────┘  │
-│         │                │                │                  │           │
-│         └────────────────┴────────────────┴──────────────────┘           │
-│                                    │                                       │
-│                          ┌─────────┴─────────┐                            │
-│                          │   Service Layer   │                            │
-│                          │  - Budget Service │                            │
-│                          │  - Transaction    │                            │
-│                          │    Service        │                            │
-│                          └─────────┬─────────┘                            │
-│                                    │                                       │
-│  ┌─────────────────────────────────┴───────────────────────────────────┐  │
-│  │                       ML Module (Burn)                              │  │
-│  │  ┌────────────────────────────┐  ┌──────────────────────────────┐ │  │
-│  │  │  CSV Parser                │  │  ML Classifier               │ │  │
-│  │  │  - Israeli CC formats      │  │  - Category prediction      │ │  │
-│  │  │  - Generic format          │  │  - Merchant identification  │ │  │
-│  │  └────────────────────────────┘  └──────────────────────────────┘ │  │
-│  └────────────────────────────────────────────────────────────────────┘  │
-└───────────────────────────────────────────────────────────────────────────┘
-                                     │
-                                     ▼
+│                        Backend (Rust - API + ML)                            │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐     │
+│  │    Auth     │  │   Budget    │  │ Transaction │  │   CSV Upload    │     │
+│  │ Middleware  │  │   Routes    │  │   Routes    │  │     Handler     │     │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └────────┬────────┘     │
+│         │                │                │                  │              │
+│         └────────────────┴─────────┬──────┴──────────────────┘              │
+│                                    │                                        │
+│                          ┌─────────┴─────────┐                              │
+│                          │   Service Layer   │                              │
+│                          │ - Budget Service  │                              │
+│                          │   - Transaction   │                              │
+│                          │       Service     │                              │
+│                          └─────────┬─────────┘                              │
+│                                    │                                        │
+│  ┌─────────────────────────────────┴───────────────────────────────────┐    │
+│  │                       ML Module (Burn)                              │    │
+│  │  ┌────────────────────────────┐  ┌──────────────────────────────┐   │    │
+│  │  │         CSV Parser         │  │        ML Classifier         │   │    │
+│  │  │    - Israeli CC formats    │  │    - Category prediction     │   │    │ 
+│  │  │    - Generic format        │  │  - Merchant identification   │   │    │ 
+│  │  └────────────────────────────┘  └──────────────────────────────┘   │    │ 
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                     │                                  
+                                     ▼                                  
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│           Database (PostgreSQL)                                             │
-│   ┌─────────┐ ┌─────────┐ ┌─────────┐                                     │
-│   │ Users   │ │Budgets  │ │Transactions│                                    │
-│   └─────────┘ └─────────┘ └─────────┘                                     │
+│                            Database (PostgreSQL)                            │
+│                 ┌─────────┐ ┌─────────┐ ┌──────────────┐                    │
+│                 │  Users  │ │ Budgets │ │ Transactions │                    │
+│                 └─────────┘ └─────────┘ └──────────────┘                    │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -160,7 +159,7 @@ All-in-1/
 | `services/auth_service.rs` | Authentication business logic for OAuth token exchange, user lookup and creation |
 | `services/budget_service.rs` | Business logic for budget operations including creation, updates, and spending calculations |
 | `services/transaction_service.rs` | Business logic for transaction CRUD operations and filtering |
-| `services/llm_client.rs` | HTTP client for calling external LLM APIs (OpenAI/Anthropic) for insights |
+| `services/llm_client.rs` | HTTP client for calling external LLM APIs for insights |
 | `models/user.rs` | User data model with id, tz (Israeli ID), email, name, OAuth provider fields, and timestamps |
 | `models/budget.rs` | Budget data model with amount limits and category associations |
 | `models/transaction.rs` | Transaction data model with categorized spending information |
@@ -224,7 +223,7 @@ iOS → Rust API → Gather transaction data → Send to LLM → Return insights
 | ML Framework | Burn | Rust training + inference via Burn (tch backend) |
 | Database | PostgreSQL | Reliable, proven in production |
 | iOS | Swift + SwiftUI | Native iOS, modern UI framework |
-| LLM | External API (OpenAI/Anthropic) | User preference |
+| LLM | External API  | User preference (Choice between large providers or BYOM locally)|
 
 ---
 
@@ -249,9 +248,9 @@ iOS → Rust API → Gather transaction data → Send to LLM → Return insights
 
 ## Future Enhancements
 
+- [ ] Tax Form managment and filing 
 - [ ] Multi-currency support
 - [ ] Investment portfolio tracking
 - [ ] Bill reminders
 - [ ] Export to PDF/Excel
 - [ ] On-device ML for privacy
-- [ ] Apple Watch companion app
